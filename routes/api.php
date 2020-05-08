@@ -14,6 +14,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:api')->group(function () {
+    // Move routes within this middleware group if api auth is needed
 });
+
+Route::resource('todo-lists', 'Api\TodoListController')->except([
+    'create',
+    'edit',
+]);
+
+Route::resource('todos', 'Api\TodoController')->except([
+    'create',
+    'edit',
+]);
