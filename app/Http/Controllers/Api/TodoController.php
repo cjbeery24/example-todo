@@ -32,7 +32,17 @@ class TodoController extends BaseApiController
         $paginationValidator->validate();
 
         $includes = $request->input('includes', []);
-        $todosQuery = Todo::query()->with($includes);
+        $todosQuery = Todo::query()->with($includes)
+            ->where('todo_list_id', $request->input('todo_list_id'));
+
+        if ($request->has('completed')) {
+            $completed = filter_var($request->input('completed'), FILTER_VALIDATE_BOOLEAN);
+            if ($completed) {
+                $todosQuery->whereNotNull('completed_at');
+            } else {
+                $todosQuery->whereNull('completed_at');
+            }
+        }
 
         return $this->paginate($request, $todosQuery);
     }

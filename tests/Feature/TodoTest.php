@@ -39,6 +39,11 @@ class TodoTest extends TestCase
             'todo_list_id' => $todoList->id
         ]);
 
+        $anotherTodoList = factory(TodoList::class)->create();
+        factory(Todo::class, 4)->create([
+            'todo_list_id' => $anotherTodoList->id
+        ]);
+
         $response = $this->json('GET', '/api/todos', [
             'todo_list_id' => $todoList->id,
         ]);
@@ -50,6 +55,33 @@ class TodoTest extends TestCase
         $todos = $response->json(['data']);
         foreach ($todos as $todo) {
             $this->assertEquals($todoList->id, $todo['todo_list_id']);
+        }
+    }
+
+    public function testCanListOnlyCompletedTodosForATodoList()
+    {
+        $todoList = factory(TodoList::class)->create();
+        factory(Todo::class, 4)->create([
+            'todo_list_id' => $todoList->id
+        ]);
+
+        factory(Todo::class, 4)->create([
+            'todo_list_id' => $todoList->id,
+            'completed_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+
+        $response = $this->json('GET', '/api/todos', [
+            'todo_list_id' => $todoList->id,
+            'completed' => true,
+        ]);
+        $response->assertOk();
+
+        $todoCount = $response->json(['total']);
+        $this->assertEquals(4, $todoCount);
+
+        $todos = $response->json(['data']);
+        foreach ($todos as $todo) {
+            $this->assertNotNull($todo['completed_at']);
         }
     }
 
